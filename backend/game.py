@@ -24,7 +24,7 @@ class Game:
         mini_board_loc = (move_id - 1) % 9
 
         # check valid move
-        if self.board[mini_board][mini_board_loc] == 0 and (self.cur_move_type == 0 or self.cur_move_type == mini_board) and self.board_wins[mini_board] == 0:
+        if self.board[mini_board][mini_board_loc] == 0 and (self.cur_move_type == 0 or self.cur_move_type == mini_board + 1) and self.board_wins[mini_board] == 0:
 
             # add it to board
             self.board[mini_board][mini_board_loc] = self.turn 
@@ -52,10 +52,16 @@ class Game:
                         flag = False
                         break
                 
-                self.cur_move_type = 0 if flag else mini_board_loc
+                self.cur_move_type = 0 if flag else mini_board_loc + 1
 
             else:
                 self.cur_move_type = 0
 
             # update turn
             self.turn = 1 if self.turn == 2 else 2
+
+    def reset(self):
+        self.board = [[0] * 9 for _ in range(9)]
+        self.board_wins = [0] * 9
+        self.turn = 1
+        self.cur_move_type = 0

@@ -18,6 +18,12 @@ class Board(BaseModel):
     # 9 by 9 list to simulate the board
     # 0 for open-space, 1 for P1, 2 for P2
     board: list[list[int]]
+    
+    # 0 for anymove, 1-9 for different mini tic-tac-toes
+    cur_move_type: int
+
+    # 1 for P1, 2 for P2, keeps track of all the mini-board wins
+    board_wins: list[int]
 
 app = FastAPI()
 
@@ -37,17 +43,17 @@ gamestate = Game()
 
 @app.get("/", response_model=Board)
 def get_board():
-    return Board(board=gamestate.board, cur_move_type=gamestate.cur_move_type)
+    return Board(board=gamestate.board, cur_move_type=gamestate.cur_move_type, board_wins=gamestate.board_wins)
 
 @app.post("/move", response_model=Board)
 def make_move(move: Move):
     gamestate.make_move(move.square)
-    return Board(board=gamestate.board, cur_move_type=gamestate.cur_move_type)
+    return Board(board=gamestate.board, cur_move_type=gamestate.cur_move_type, board_wins=gamestate.board_wins)
 
 @app.delete("/reset", response_model=Board)
 def reset():
-    gamestate = Game()
-    return Board(board=gamestate.board, cur_move_type=gamestate.cur_move_type)
+    gamestate.reset()
+    return Board(board=gamestate.board, cur_move_type=gamestate.cur_move_type, board_wins=gamestate.board_wins)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)

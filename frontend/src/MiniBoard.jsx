@@ -1,9 +1,23 @@
 import React from "react";
 import Tile from "./Tile";
 
-function MiniBoard({board, id, click}) {
+function MiniBoard({board, id, click, highlight}) {
+
+    let classname;
+    if (highlight === 0) {
+        classname = "miniboard";
+    } else if (highlight === 3) {
+        classname = "miniboard highlight";
+    } else if (highlight === 1) {
+        classname = "miniboard p1_winner";
+    } else if (highlight === 2) {
+        classname = "miniboard p2_winner";
+    } else {
+        throw error 
+    }
+
     return (
-        <div className="miniboard">
+        <div className={classname}>
             <Tile state={board[0]} id={9*id+1} click={click} />
             <Tile state={board[1]} id={9*id+2} click={click} />
             <Tile state={board[2]} id={9*id+3} click={click} />
