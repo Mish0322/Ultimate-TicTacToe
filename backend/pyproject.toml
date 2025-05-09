@@ -1,0 +1,15 @@
+[project]
+name = "Ultimate-TicTacToe"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12.9"
+dependencies = [
+    "fastapi>=0.115.11",
+    "pytest>=8.3.5",
+    "uv>=0.6.11",
+    "uvicorn>=0.34.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
