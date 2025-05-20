@@ -1,0 +1,17 @@
+List of things people did / need to do
+
+Done:
+
+- Created frontend and UI: James
+- Created basic game logic: James
+
+Need to do:
+
+- add draws / winning to game logic 
+- clean up gamelogic code 
+- add undo and redo moves (used for mini-max)
+- create a "random move" bot 
+- implement player vs computer and computer vs computer matches
+- create mini-max w/ alpha beta pruning Ai
+- create MCTS Ai 
+- add tests
