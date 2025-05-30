@@ -22,38 +22,6 @@ h1 {
   -webkit-text-fill-color: transparent;
 }
 
-.game-controls {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.control-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  padding: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: white;
-}
-
-.control-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-}
-
-.control-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.control-btn svg {
-  display: block;
-  stroke-width: 2;
-}
-
 .board {
   display: grid;
   grid-template-columns: repeat(3, 186px);
