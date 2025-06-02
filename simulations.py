@@ -17,7 +17,7 @@ class BestMoveOneStrategy:
         self.depth = depth
 
     def __call__(self, game):
-        game.best_move(depth=2, eval_func=game.evaluate_one)
+        game.best_move(depth=self.depth, eval_func=game.evaluate_one)
 
 
 class BestMoveTwoStrategy:
@@ -25,7 +25,7 @@ class BestMoveTwoStrategy:
         self.depth = depth
 
     def __call__(self, game):
-        game.best_move(depth=2, eval_func=game.evaluate_two)
+        game.best_move(depth=self.depth, eval_func=game.evaluate_two)
 
 
 def simulate_game(_, p1_strategy, p2_strategy):
@@ -80,14 +80,14 @@ def run_simulation(label, n, p1_strategy, p2_strategy):
 
 if __name__ == "__main__":
     run_simulation("Random vs Random", 1000, RandomStrategy(), RandomStrategy())
-    run_simulation("DLMM1 vs Random", 1000, BestMoveOneStrategy(2), RandomStrategy())
-    run_simulation("DLMM2 vs Random", 1000, BestMoveTwoStrategy(2), RandomStrategy())
+    run_simulation("DLMM1 vs Random", 1000, BestMoveOneStrategy(3), RandomStrategy())
+    run_simulation("DLMM2 vs Random", 1000, BestMoveTwoStrategy(3), RandomStrategy())
     run_simulation("DLMM2+4 vs Random", 1000, BestMoveTwoStrategy(4), RandomStrategy())
     run_simulation(
-        "DLMM1 vs DLMM2", 1000, BestMoveOneStrategy(2), BestMoveTwoStrategy(2)
+        "DLMM1 vs DLMM2", 1000, BestMoveOneStrategy(3), BestMoveTwoStrategy(3)
     )
     run_simulation(
-        "DLMM2 vs DLMM2+4", 1000, BestMoveTwoStrategy(2), BestMoveTwoStrategy(4)
+        "DLMM2 vs DLMM2+4", 1000, BestMoveTwoStrategy(3), BestMoveTwoStrategy(4)
     )
     run_simulation(
         "MCTS vs Random", 1000, MCTSStrategy(iterations=300), RandomStrategy()

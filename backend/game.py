@@ -1,6 +1,6 @@
 import copy
 import random
-from backend.MCTSStrategy import MCTSNode, MCTSStrategy
+from MCTSStrategy import MCTSNode, MCTSStrategy
 
 
 class Game:
