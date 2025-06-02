@@ -104,6 +104,7 @@ function MyApp() {
   }
 
   useEffect(() => {
+    reset()
     const handleKeyPress = (event) => {
       if (event.key === "r" || event.key === "R") {
         reset();
