@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from game import Game
 from random import choice
+from MCTSStrategy import MCTSStrategy
 
 
 class Move(BaseModel):
@@ -85,21 +86,6 @@ def random_move():
     if valid_moves:
         move_id = choice(valid_moves)
         gamestate.make_move(move_id)
-
-    winner = gamestate.check_winner()
-    return {
-        "board": gamestate.board,
-        "cur_move_type": gamestate.cur_move_type,
-        "board_wins": gamestate.board_wins,
-        "winner": winner,
-    }
-
-
-@app.post("/best_move_full", response_model=Board)
-def best_move_full():
-    move = gamestate.best_move_full_search()
-    if move:
-        gamestate.make_move(move)
     winner = gamestate.check_winner()
     return {
         "board": gamestate.board,
@@ -111,10 +97,12 @@ def best_move_full():
 
 @app.post("/best_move", response_model=Board)
 def best_move():
-    move = gamestate.best_move()
+    move = gamestate.best_move(depth=4)
     if move:
         gamestate.make_move(move)
     winner = gamestate.check_winner()
+    print(gamestate.evaluateTwo(1))
+    print(gamestate.evaluateOne(1))
     return {
         "board": gamestate.board,
         "cur_move_type": gamestate.cur_move_type,
@@ -123,28 +111,25 @@ def best_move():
     }
 
 
-@app.post("/sim_R_v_DLMM", response_model=Board)
-def sim_R_v_DLMM():
-    gamestate.reset()
-    while gamestate.check_winner() == 0:
-        # Player 1: depth-limited minimax
-        if gamestate.turn == 1:
-            gamestate.best_move()
-        else:
-            # Player 2: random move
-            valid_moves = gamestate.get_valid_moves()
-            if valid_moves:
-                move_id = choice(valid_moves)
-                gamestate.make_move(move_id)
+def move_to_board_cell(move_id):
+    mini_board = (move_id - 1) // 9 + 1
+    cell = (move_id - 1) % 9 + 1
+    return {"move": move_id, "mini_board": mini_board, "cell": cell}
 
-    winner = gamestate.check_winner()
-    return {
-        "board": gamestate.board,
-        "cur_move_type": gamestate.cur_move_type,
-        "board_wins": gamestate.board_wins,
-        "winner": winner,
-    }
 
+@app.get("/suggest_moves")
+def suggest_moves():
+    suggestions = {}
+
+    move1 = gamestate.find_best_move(depth=5, eval_func=gamestate.evaluate_one)
+    move2 = gamestate.find_best_move(depth=5, eval_func=gamestate.evaluate_two)
+    move3 = gamestate.find_best_mcts_move(iterations=1000)
+
+    suggestions["minimax_one"] = move_to_board_cell(move1) if move1 else None
+    suggestions["minimax_two"] = move_to_board_cell(move2) if move2 else None
+    suggestions["mcts"] = move_to_board_cell(move3) if move3 else None
+
+    return suggestions
 
 
 if __name__ == "__main__":

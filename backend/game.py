@@ -1,80 +1,12 @@
+import copy
+import random
+from backend.MCTSStrategy import MCTSNode, MCTSStrategy
+
+
 class Game:
-    # 9 by 9 list to simulate the board
-    # 0 for open-space, 1 for P1, 2 for P2
-    # outer lists are by mini tic-tac-toe boards
-    board: list[list[int]]
-
-    # 1 for P1, 2 for P2
-    turn: int
-
-    # 0 for anymove, 1-9 for different mini tic-tac-toes
-    cur_move_type: int
-
-    # 1 for P1, 2 for P2, keeps track of all the mini-board wins
-    board_wins: list[int]
-
-    winner: int
-
     def __init__(self):
-        self.board = [[0] * 9 for _ in range(9)]
-        self.board_wins = [0] * 9
-        self.turn = 1
-        self.cur_move_type = 0
-        self.winner = 0
-
-    def make_move(self, move_id):
-        mini_board = (move_id - 1) // 9
-        mini_board_loc = (move_id - 1) % 9
-
-        # check valid move
-        if (
-            self.board[mini_board][mini_board_loc] == 0
-            and (self.cur_move_type == 0 or self.cur_move_type == mini_board + 1)
-            and self.board_wins[mini_board] == 0
-        ):
-
-            # add it to board
-            self.board[mini_board][mini_board_loc] = self.turn
-
-            # check for a mini_board win
-            flag = False
-            for index_set in [
-                [1, 2, 3],
-                [4, 5, 6],
-                [7, 8, 9],
-                [1, 4, 7],
-                [2, 5, 8],
-                [3, 6, 9],
-                [1, 5, 9],
-                [3, 5, 7],
-            ]:
-                temp = True
-                for index in index_set:
-                    if self.board[mini_board][index - 1] != self.turn:
-                        temp = False
-
-                if temp:
-                    flag = True
-                    break
-
-            if flag:
-                self.board_wins[mini_board] = self.turn
-
-            # create next move_type
-            if self.board_wins[mini_board_loc] == 0:
-                flag = True
-                for index in range(9):
-                    if self.board[mini_board_loc][index] == 0:
-                        flag = False
-                        break
-
-                self.cur_move_type = 0 if flag else mini_board_loc + 1
-
-            else:
-                self.cur_move_type = 0
-
-            # update turn
-            self.turn = 1 if self.turn == 2 else 2
+        self.reset()
+        self._state_stack = []
 
     def reset(self):
         self.board = [[0] * 9 for _ in range(9)]
@@ -82,172 +14,155 @@ class Game:
         self.turn = 1
         self.cur_move_type = 0
         self.winner = 0
+        self._state_stack = []
 
-    def check_winner(self):
-        if len(self.get_valid_moves()) == 0:
-            return 3
-            # tie
-        for index_set in [
-            [1, 2, 3],
-            [4, 5, 6],
-            [7, 8, 9],
+    def make_move(self, move_id):
+        mini_board = (move_id - 1) // 9
+        mini_loc = (move_id - 1) % 9
+
+        if (
+            self.board[mini_board][mini_loc] == 0
+            and (self.cur_move_type == 0 or self.cur_move_type == mini_board + 1)
+            and self.board_wins[mini_board] == 0
+        ):
+            self.board[mini_board][mini_loc] = self.turn
+
+            if self.is_winner(self.board[mini_board], self.turn):
+                self.board_wins[mini_board] = self.turn
+
+            if self.board_wins[mini_loc] == 0 and any(
+                self.board[mini_loc][i] == 0 for i in range(9)
+            ):
+                self.cur_move_type = mini_loc + 1
+            else:
+                self.cur_move_type = 0
+
+            self.turn = 3 - self.turn
+
+    def is_winner(self, board, player):
+        win_indices = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
             [1, 4, 7],
             [2, 5, 8],
-            [3, 6, 9],
-            [1, 5, 9],
-            [3, 5, 7],
-        ]:
-            if all(self.board_wins[index - 1] == 1 for index in index_set):
-                return 1  # P1 wins
-            if all(self.board_wins[index - 1] == 2 for index in index_set):
-                return 2  # P2 wins
-        return 0  # No winner yet
+            [0, 4, 8],
+            [2, 4, 6],
+        ]
+        return any(all(board[i] == player for i in indices) for indices in win_indices)
+
+    def check_winner(self):
+        if not self.get_valid_moves():
+            return 3
+        if self.is_winner(self.board_wins, 1):
+            return 1
+        if self.is_winner(self.board_wins, 2):
+            return 2
+        return 0
 
     def get_valid_moves(self):
-        valid_moves = []
-        for mini_board in range(9):
-            # Skip if this mini-board is already won
-            if self.board_wins[mini_board] != 0:
+        valid = []
+        for mini in range(9):
+            if self.board_wins[mini] != 0:
                 continue
-            # Skip if we must play a specific mini-board
-            if self.cur_move_type != 0 and self.cur_move_type != mini_board + 1:
+            if self.cur_move_type and self.cur_move_type != mini + 1:
                 continue
-            # Check for empty tiles
-            for index in range(9):
-                if self.board[mini_board][index] == 0:
-                    move_id = mini_board * 9 + index + 1
-                    valid_moves.append(move_id)
-        return valid_moves
+            for i in range(9):
+                if self.board[mini][i] == 0:
+                    valid.append(mini * 9 + i + 1)
+        return valid
 
-    def minimax(self, alpha, beta, maximizing_player, player):
-        winner = self.check_winner()
-        if winner == player:
-            return 1
-        elif winner != 0 and winner != player:
-            return -1
-        elif winner == 3:  # Tie
-            return 0
-
-        valid_moves = self.get_valid_moves()
-
-        if maximizing_player:
-            max_eval = -float("inf")
-            for move in valid_moves:
-                # Save current state
-                prev_board = [row[:] for row in self.board]
-                prev_board_wins = self.board_wins[:]
-                prev_turn = self.turn
-                prev_cur_move_type = self.cur_move_type
-
-                self.make_move(move)
-                eval = self.minimax(alpha, beta, False, player)
-                # Undo move
-                self.board = prev_board
-                self.board_wins = prev_board_wins
-                self.turn = prev_turn
-                self.cur_move_type = prev_cur_move_type
-
-                max_eval = max(max_eval, eval)
-                alpha = max(alpha, eval)
-                if beta <= alpha:
-                    break
-            return max_eval
-        else:
-            min_eval = float("inf")
-            for move in valid_moves:
-                # Save current state
-                prev_board = [row[:] for row in self.board]
-                prev_board_wins = self.board_wins[:]
-                prev_turn = self.turn
-                prev_cur_move_type = self.cur_move_type
-
-                self.make_move(move)
-                eval = self.minimax(alpha, beta, True, player)
-                # Undo move
-                self.board = prev_board
-                self.board_wins = prev_board_wins
-                self.turn = prev_turn
-                self.cur_move_type = prev_cur_move_type
-
-                min_eval = min(min_eval, eval)
-                beta = min(beta, eval)
-                if beta <= alpha:
-                    break
-            return min_eval
-
-    def best_move_full_search(self):
-        valid_moves = self.get_valid_moves()
-        best_val = -float("inf")
-        best_move = None
-        player = self.turn
-        n = 0
-
-        for move in valid_moves:
-            # Save current state
-            print(n)
-            n += 1
-            prev_board = [row[:] for row in self.board]
-            prev_board_wins = self.board_wins[:]
-            prev_turn = self.turn
-            prev_cur_move_type = self.cur_move_type
-
-            self.make_move(move)
-            eval = self.minimax(-float("inf"), float("inf"), False, player)
-            # Undo move
-            self.board = prev_board
-            self.board_wins = prev_board_wins
-            self.turn = prev_turn
-            self.cur_move_type = prev_cur_move_type
-
-            if eval > best_val:
-                best_val = eval
-                best_move = move
-
-        return best_move
-
-    def evaluate(self, player):
-        # If game over
+    def evaluate_one(self, player):
         winner = self.check_winner()
         if winner == player:
             return 100
-        elif winner != 0 and winner != player:
+        elif winner and winner != player:
+            return -100
+        return sum(10 if w == player else -10 if w != 0 else 0 for w in self.board_wins)
+
+    def evaluate_two(self, player):
+        winner = self.check_winner()
+        if winner == player:
+            return 100
+        elif winner and winner != player:
             return -100
 
-        # Otherwise, heuristic: mini-board wins
+        opponent = 3 - player
         score = 0
-        for w in self.board_wins:
+
+        for mini in range(9):
+            mini_board = self.board[mini]
+            w = self.board_wins[mini]
             if w == player:
-                score += 10
-            elif w != 0 and w != player:
-                score -= 10
+                score += 20
+            elif w == opponent:
+                score -= 20
+            else:
+                for indices in self._win_indices():
+                    line = [mini_board[i] for i in indices]
+                    if line.count(player) == 2 and line.count(0) == 1:
+                        score += 3
+                    if line.count(opponent) == 2 and line.count(0) == 1:
+                        score -= 3
+
+        for indices in self._win_indices():
+            line = [self.board_wins[i] for i in indices]
+            if line.count(player) == 2 and line.count(0) == 1:
+                score += 15
+            if line.count(opponent) == 2 and line.count(0) == 1:
+                score -= 15
+
         return score
 
-    def dlminimax(self, depth, alpha, beta, maximizing_player, player):
+    def _win_indices(self):
+        return [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6],
+        ]
+
+    def order_moves(self, moves):
+        def score(move):
+            loc = (move - 1) % 9
+            return 3 if loc == 4 else 2 if loc in [0, 2, 6, 8] else 1
+
+        return sorted(moves, key=score, reverse=True)
+
+    def _save_state(self):
+        self._state_stack.append(
+            (
+                copy.deepcopy(self.board),
+                self.board_wins[:],
+                self.turn,
+                self.cur_move_type,
+            )
+        )
+
+    def _restore_state(self):
+        self.board, self.board_wins, self.turn, self.cur_move_type = (
+            self._state_stack.pop()
+        )
+
+    def dlminimax(self, depth, alpha, beta, maximizing, player, eval_func):
         winner = self.check_winner()
         if winner != 0 or depth == 0:
-            return self.evaluate(player)
+            return eval_func(player)
 
-        valid_moves = self.get_valid_moves()
+        valid_moves = self.order_moves(self.get_valid_moves())
 
-        if maximizing_player:
+        if maximizing:
             max_eval = -float("inf")
             for move in valid_moves:
-                # Save full state
-                prev_board = [row[:] for row in self.board]
-                prev_board_wins = self.board_wins[:]
-                prev_turn = self.turn
-                prev_cur_move_type = self.cur_move_type
-
-                # Make the move
+                self._save_state()
                 self.make_move(move)
-                eval = self.dlminimax(depth - 1, alpha, beta, False, player)
-
-                # Undo fully
-                self.board = prev_board
-                self.board_wins = prev_board_wins
-                self.turn = prev_turn
-                self.cur_move_type = prev_cur_move_type
-
+                eval = self.dlminimax(depth - 1, alpha, beta, False, player, eval_func)
+                self._restore_state()
                 max_eval = max(max_eval, eval)
                 alpha = max(alpha, eval)
                 if beta <= alpha:
@@ -256,59 +171,86 @@ class Game:
         else:
             min_eval = float("inf")
             for move in valid_moves:
-                # Save full state
-                prev_board = [row[:] for row in self.board]
-                prev_board_wins = self.board_wins[:]
-                prev_turn = self.turn
-                prev_cur_move_type = self.cur_move_type
-
+                self._save_state()
                 self.make_move(move)
-                eval = self.dlminimax(depth - 1, alpha, beta, True, player)
-
-                # Undo fully
-                self.board = prev_board
-                self.board_wins = prev_board_wins
-                self.turn = prev_turn
-                self.cur_move_type = prev_cur_move_type
-
+                eval = self.dlminimax(depth - 1, alpha, beta, True, player, eval_func)
+                self._restore_state()
                 min_eval = min(min_eval, eval)
                 beta = min(beta, eval)
                 if beta <= alpha:
                     break
             return min_eval
 
-    def best_move(self):
+    def best_move(self, depth, eval_func):
         valid_moves = self.get_valid_moves()
         best_val = -float("inf")
         best_move = None
         player = self.turn
-        n = 0
 
         for move in valid_moves:
-            print(f"Testing move number: {n}", end="\r")
-            n += 1
-            # Save current state
-            prev_board = [row[:] for row in self.board]
-            prev_board_wins = self.board_wins[:]
-            prev_turn = self.turn
-            prev_cur_move_type = self.cur_move_type
-
-            # Try the move
+            self._save_state()
             self.make_move(move)
-            eval = self.dlminimax(7, -float("inf"), float("inf"), False, player)
-
-            # Undo move
-            self.board = prev_board
-            self.board_wins = prev_board_wins
-            self.turn = prev_turn
-            self.cur_move_type = prev_cur_move_type
-
+            eval = self.dlminimax(
+                depth,
+                -float("inf"),
+                float("inf"),
+                False,
+                player,
+                eval_func,
+            )
+            self._restore_state()
             if eval > best_val:
                 best_val = eval
                 best_move = move
-
-        # Actually make the best move
         if best_move:
             self.make_move(best_move)
+        return best_move
 
+    def best_mcts_move(self, iterations=1000):
+        mcts = MCTSStrategy(iterations=iterations)
+        best_move = mcts(self)
+        return best_move
+
+    def find_best_mcts_move(self, iterations=1000):
+        mcts = MCTSStrategy(iterations=iterations)
+        root = self.get_root(self, iterations)
+        best_move = max(root.children, key=lambda c: c.visits).move
+        return best_move
+
+    def get_root(self, game, iterations):
+        player = game.turn
+        root = MCTSNode(game)
+        for _ in range(iterations):
+            node = root
+            while node.children and node.is_fully_expanded():
+                node = node.best_child()
+            if node.visits == 0:
+                node.expand()
+            if node.children:
+                node = random.choice(node.children)
+            result = node.simulate()
+            node.backpropagate(result, player)
+        return root
+
+    def find_best_move(self, depth, eval_func):
+        valid_moves = self.get_valid_moves()
+        best_val = -float("inf")
+        best_move = None
+        player = self.turn
+
+        for move in valid_moves:
+            self._save_state()
+            self.make_move(move)
+            eval = self.dlminimax(
+                depth,
+                -float("inf"),
+                float("inf"),
+                False,
+                player,
+                eval_func,
+            )
+            self._restore_state()
+            if eval > best_val:
+                best_val = eval
+                best_move = move
         return best_move

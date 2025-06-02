@@ -95,15 +95,15 @@ h1 {
 }
 
 .winner {
-  font-size: 14px;
-  width: 60px;
-  height: 60px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: black;
-  border: 2px solid #fff;
-  margin: -2px;
+  font-size: 1.5rem;
+  color: #1a1a2e;
+  margin: 1rem 0;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(45deg, #00b4d8, #90e0ef);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .popup {
@@ -121,16 +121,83 @@ h1 {
 }
 
 .popup-inner {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(26, 26, 46, 0.95);
   padding: 2.5rem;
   border-radius: 1.5rem;
   text-align: center;
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: #1a1a2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
   transform: scale(0.9);
   animation: popupIn 0.3s ease forwards;
 }
+
+.suggestion-button {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  margin: 0.25rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.suggestion-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+  transform: scale(1.05);
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.button-row button {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.button-row button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+  transform: scale(1.05);
+}
+
+.popup-inner button {
+  background: rgba(0, 0, 0, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  margin-top: 1rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.popup-inner button:hover {
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+  transform: scale(1.05);
+}
+
+
+
 
 @keyframes popupIn {
   from { transform: scale(0.9); opacity: 0; }
